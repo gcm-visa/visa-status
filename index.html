@@ -6,12 +6,14 @@
   <title>Visa Application Tracking</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
     body {
       font-family: 'Poppins', sans-serif;
       background-color: #e8f5e9;
       text-align: center;
       padding: 20px;
     }
+
     .container {
       max-width: 500px;
       margin: auto;
@@ -21,16 +23,19 @@
       box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
       border-top: 6px solid #2e7d32;
     }
+
     .logo {
       max-width: 400px;
       margin-bottom: 15px;
     }
+
     h2 {
       font-size: 24px;
       font-weight: 600;
       color: #1b5e20;
       margin-bottom: 15px;
     }
+
     input {
       width: 90%;
       padding: 12px;
@@ -39,6 +44,7 @@
       border-radius: 6px;
       font-size: 14px;
     }
+
     button {
       width: 94%;
       padding: 12px;
@@ -50,9 +56,11 @@
       cursor: pointer;
       font-weight: 600;
     }
+
     button:hover {
       background-color: #2e7d32;
     }
+
     #result {
       margin-top: 20px;
       text-align: left;
@@ -62,21 +70,25 @@
       box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
       font-size: 15px;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
     }
+
     th, td {
       border: 1px solid #ddd;
       padding: 8px;
       text-align: left;
     }
+
     th {
       background-color: #388e3c;
       color: white;
       font-weight: 600;
     }
+
     .loader {
       display: none;
       margin: 15px auto;
@@ -87,20 +99,22 @@
       border-top: 5px solid #388e3c;
       animation: spin 1s linear infinite;
     }
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
   </style>
+
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbyveaVKVRf_HTbMcQu4Zd03EtQ7uyEtL6pPq-e3t5DRNLR4Mwza-N8i2VerRrHWWbY/exec";
+    const scriptUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // Replace with your script URL
 
     function searchPassport() {
-      const input = document.getElementById("passportInput").value.trim();
+      const searchInput = document.getElementById("passportInput").value.trim();
       const resultDiv = document.getElementById("result");
       const loader = document.getElementById("loadingSpinner");
 
-      if (!input) {
+      if (!searchInput) {
         resultDiv.innerHTML = "<p style='color:red;'>Please enter a valid ID or Passport Number.</p>";
         return;
       }
@@ -108,53 +122,64 @@
       resultDiv.innerHTML = "";
       loader.style.display = "block";
 
-      fetch(`${scriptUrl}?searchInput=${encodeURIComponent(input)}`)
+      fetch(`${scriptUrl}?searchInput=${encodeURIComponent(searchInput)}`)
         .then(response => response.json())
-        .then(result => {
-          loader.style.display = "none";
-          if (!result || Object.keys(result).length === 0) {
-            resultDiv.innerHTML = "<p style='color:red;'>No matching record found.</p>";
-            return;
-          }
+        .then(displayResult)
+        .catch(showError);
+    }
 
-          let fullName = (result.surname || '') + ' ' + (result.givenName || '');
-          fullName = fullName.trim() || 'N/A';
+    function displayResult(result) {
+      const resultDiv = document.getElementById("result");
+      const loader = document.getElementById("loadingSpinner");
+      loader.style.display = "none";
 
-          resultDiv.innerHTML = `
-<table>
-  <tr><th colspan="2">Personal Information</th></tr>
-  <tr><td>ID Number</td><td>${result.idNumber || 'N/A'}</td></tr>
-  <tr><td>Full Name</td><td>${fullName}</td></tr>
-  <tr><td>Passport Number</td><td>${result.passportNumber || 'N/A'}</td></tr>
+      if (!result || Object.keys(result).length === 0) {
+        resultDiv.innerHTML = "<p style='color:red;'>No matching record found.</p>";
+        return;
+      }
 
-  <tr><th colspan="2">Processing Status</th></tr>
-  <tr><td>Submitted to Immigration</td><td>${getStatusIcon(result.submittedToBI)}</td></tr>
-  <tr><td>Approved</td><td>${getStatusIcon(result.approved)}</td></tr>
-  <tr><td>Sent for Implementation</td><td>${getStatusIcon(result.sentForImpl)}</td></tr>
-  <tr><td>Implemented</td><td>${getStatusIcon(result.implemented)}</td></tr>
-  <tr><td>ACR Released</td><td>${getStatusIcon(result.acrReleased)}</td></tr>
+      let fullName = (result.surname || '') + ' ' + (result.givenName || '');
+      fullName = fullName.trim() || 'N/A';
 
-  <tr><th colspan="2">If Pending Backlogs</th></tr>
-  <tr><td>Preparing for submission</td><td>${getStatusIcon(result.gettingReady, 'Submitted')}</td></tr>
-  <tr><td>Submitted to Immigration</td><td>${getStatusIcon(result.submittedToImmigration, '✔️')}</td></tr>
+      let output = `
+        <table>
+          <tr><th colspan="2">Personal Information</th></tr>
+          <tr><td>ID Number</td><td>${result.idNumber || 'N/A'}</td></tr>
+          <tr><td>Full Name</td><td>${fullName}</td></tr>
+          <tr><td>Passport Number</td><td>${result.passportNumber || 'N/A'}</td></tr>
 
-  <tr><th colspan="2">Remarks</th></tr>
-  <tr><td>Remarks</td><td>${result.remarks || '<span style="color:red;">*</span>'}</td></tr>
-</table>
-          `;
-        })
-        .catch(error => {
-          loader.style.display = "none";
-          console.error(error);
-          resultDiv.innerHTML = "<p style='color:red;'>An error occurred. Please try again later.</p>";
-        });
+          <tr><th colspan="2">Processing Status</th></tr>
+          <tr><td>Submitted to Immigration</td><td>${getStatusIcon(result.submittedToBI)}</td></tr>
+          <tr><td>Approved</td><td>${getStatusIcon(result.approved)}</td></tr>
+          <tr><td>Sent for Implementation</td><td>${getStatusIcon(result.sentForImpl)}</td></tr>
+          <tr><td>Implemented</td><td>${getStatusIcon(result.implemented)}</td></tr>
+          <tr><td>ACR Released</td><td>${getStatusIcon(result.acrReleased)}</td></tr>
+
+          <tr><th colspan="2">If Pending Backlogs</th></tr>
+          <tr><td>Preparing for submission</td><td>${getStatusIcon(result.gettingReady, 'Submitted')}</td></tr>
+          <tr><td>Submitted to Immigration</td><td>${getStatusIcon(result.submittedToImmigration, '✔️')}</td></tr>
+
+          <tr><th colspan="2">Remarks</th></tr>
+          <tr><td>Remarks</td><td>${result.remarks || '<span style="color:red;">*</span>'}</td></tr>
+        </table>
+      `;
+
+      resultDiv.innerHTML = output;
     }
 
     function getStatusIcon(status, defaultStatus = 'Pending') {
       return status && status !== "Pending" ? status : `<span style="color:red;">${defaultStatus}</span>`;
     }
+
+    function showError(error) {
+      const loader = document.getElementById("loadingSpinner");
+      loader.style.display = "none";
+      document.getElementById("result").innerHTML = "<p style='color:red;'>An error occurred while fetching data. Please try again later.</p>";
+      console.error("Error:", error);
+    }
   </script>
 </head>
+
 <body>
   <div class="container">
     <img src="https://www.dropbox.com/scl/fi/plnevepzhsf9etdoxnlzs/logo-for-MARS.png?rlkey=03l9s706cr83aml02v64kgv38&raw=1" alt="MARS Logo" class="logo">

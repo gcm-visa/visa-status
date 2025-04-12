@@ -5,22 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Visa Application Tracking</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
       background: none;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
     }
 
     .container {
-      width: 100%;
       max-width: 800px;
-      padding: 20px;
-      box-sizing: border-box;
+      margin: 20px auto;
+      padding: 0 15px;
     }
 
     h2 {
@@ -28,19 +27,25 @@
       margin-bottom: 20px;
     }
 
-    input, button {
-      width: 100%;
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], button {
       padding: 12px;
-      margin: 8px 0;
       border: 1px solid #ccc;
       border-radius: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
+      font-size: 16px;
+      width: 100%;
     }
 
     button {
       background-color: #388e3c;
       color: white;
+      border: none;
       cursor: pointer;
     }
 
@@ -66,29 +71,27 @@
 
     #result {
       margin-top: 20px;
-      max-height: 80vh;
-      overflow-y: auto;
-      font-size: 13px;
-      word-wrap: break-word;
+      overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
+      font-size: 14px;
     }
 
     th, td {
       border: 1px solid #ddd;
-      padding: 6px;
+      padding: 8px;
       text-align: left;
     }
 
     th {
       background-color: #388e3c;
       color: white;
-      font-weight: 600;
     }
+
   </style>
   <script>
     function searchPassport() {
@@ -160,8 +163,10 @@
 <body>
   <div class="container">
     <h2>Visa Application Tracking</h2>
-    <input type="text" id="passportInput" placeholder="Enter ID Number or Passport Number">
-    <button onclick="searchPassport()">Search</button>
+    <div class="form-group">
+      <input type="text" id="passportInput" placeholder="Enter ID Number or Passport Number">
+      <button onclick="searchPassport()">Search</button>
+    </div>
     <div id="loadingSpinner" class="loader"></div>
     <div id="result"></div>
   </div>

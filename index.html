@@ -2,20 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visa Application Tracking</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #e8f5e9;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+      border-top: 6px solid #2e7d32;
+    }
+    
+    .logo {
+      max-width: 400px;
+      margin-bottom: 15px;
+    }
+    
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1b5e20;
+      margin-bottom: 15px;
+    }
+    
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    button {
+      width: 94%;
+      padding: 12px;
+      background-color: #388e3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    button:hover {
+      background-color: #2e7d32;
+    }
+    
+    #result {
+      margin-top: 20px;
+      text-align: left;
+      padding: 15px;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+      font-size: 15px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    
+    th {
+      background-color: #388e3c;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .loader {
+      display: none;
+      margin: 15px auto;
+      width: 40px;
+      height: 40px;
+      border: 5px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 5px solid #388e3c;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
   <script>
     function searchPassport() {
       var searchInput = document.getElementById("passportInput").value.trim();
       var resultDiv = document.getElementById("result");
       var loader = document.getElementById("loadingSpinner");
-
+      
       if (!searchInput) {
         resultDiv.innerHTML = "<p style='color:red;'>Please enter a valid ID or Passport Number.</p>";
         return;
       }
-
+      
       resultDiv.innerHTML = "";
       loader.style.display = "block";
+      
+      console.log("Sending Search Input: ", searchInput); // Log the input before sending
 
       fetch("https://script.google.com/macros/s/AKfycbxjFlKSj05lGAg11cd7ets3m5HhfY6Mw1hRSarOA6AzFz4C-FK0ei_q3TDKJChigb6v/exec", {
         method: "POST",
@@ -33,23 +137,59 @@
         resultDiv.innerHTML = "<p style='color:red;'>An error occurred. Please try again later.</p>";
       });
     }
-
+    
     function displayResult(result) {
       var resultDiv = document.getElementById("result");
+      var loader = document.getElementById("loadingSpinner");
+      loader.style.display = "none";
+      
       if (!result) {
         resultDiv.innerHTML = "<p style='color:red;'>No matching record found.</p>";
         return;
       }
-
-      // Display result (you can format it as needed)
-      resultDiv.innerHTML = JSON.stringify(result);  // Just an example of displaying it
+      
+      let fullName = (result.surname || '') + ' ' + (result.givenName || '');
+      fullName = fullName.trim() || 'N/A';
+      
+      let output = `
+        <table>
+          <tr><th colspan="2">Personal Information</th></tr>
+          <tr><td>ID Number</td><td>${result.idNumber || 'N/A'}</td></tr>
+          <tr><td>Full Name</td><td>${fullName}</td></tr>
+          <tr><td>Passport Number</td><td>${result.passportNumber || 'N/A'}</td></tr>
+          
+          <tr><th colspan="2">Processing Status</th></tr>
+          <tr><td>Submitted to Immigration</td><td>${getStatusIcon(result.submittedToBI)}</td></tr>
+          <tr><td>Approved</td><td>${getStatusIcon(result.approved)}</td></tr>
+          <tr><td>Sent for Implementation</td><td>${getStatusIcon(result.sentForImpl)}</td></tr>
+          <tr><td>Implemented</td><td>${getStatusIcon(result.implemented)}</td></tr>
+          <tr><td>ACR Released</td><td>${getStatusIcon(result.acrReleased)}</td></tr>
+          
+          <tr><th colspan="2">If Pending Backlogs</th></tr>
+          <tr><td>Preparing for submission</td><td>${getStatusIcon(result.gettingReady, 'Submitted')}</td></tr>
+          <tr><td>Submitted to Immigration</td><td>${getStatusIcon(result.submittedToImmigration, '✔️')}</td></tr>
+          
+          <tr><th colspan="2">Remarks</th></tr>
+          <tr><td>Remarks</td><td>${result.remarks || '<span style="color:red;">*</span>'}</td></tr>
+        </table>
+      `;
+      
+      resultDiv.innerHTML = output;
+    }
+    
+    function getStatusIcon(status, defaultStatus = 'Pending') {
+      return status && status !== "Pending" ? status : `<span style="color:red;">${defaultStatus}</span>`;
     }
   </script>
 </head>
 <body>
-  <input type="text" id="passportInput" placeholder="Enter ID or Passport Number">
-  <button onclick="searchPassport()">Search</button>
-  <div id="loadingSpinner" style="display:none;">Loading...</div>
-  <div id="result"></div>
+  <div class="container">
+    <img src="https://www.dropbox.com/scl/fi/plnevepzhsf9etdoxnlzs/logo-for-MARS.png?rlkey=03l9s706cr83aml02v64kgv38&raw=1" alt="MARS Logo" class="logo">
+    <h2>Visa Application Tracking</h2>
+    <input type="text" id="passportInput" placeholder="Enter ID Number or Passport Number">
+    <button onclick="searchPassport()">Search</button>
+    <div id="loadingSpinner" class="loader"></div>
+    <div id="result"></div>
+  </div>
 </body>
 </html>
